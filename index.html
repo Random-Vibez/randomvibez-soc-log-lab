@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#070912">
+  <meta name="description" content="Build a small synthetic SOC log exercise in your browser. Keep the private trainer seed and separate answer key out of analyst exports.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <link rel="canonical" href="https://randomvibez.ai/soc-log-lab/">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="styles.css">
+  <title>SOC Log Lab — RandomVibez.ai</title>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to the generator</a>
+  <header class="topbar">
+    <a class="brand" href="/" aria-label="RandomVibez home"><span class="brand-mark" aria-hidden="true">RV</span><span>RandomVibez.ai</span></a>
+    <nav aria-label="Site links"><a href="/">All tools</a><a href="/privacy.html">Privacy</a><a href="https://github.com/Random-Vibez/randomvibez-soc-log-lab" rel="noopener noreferrer">Source</a></nav>
+  </header>
+  <main id="main" class="shell">
+    <section class="hero" aria-labelledby="title">
+      <p class="eyebrow">SOC LOG LAB / TRAINING DATA</p>
+      <h1 id="title">Small synthetic log drills.<br><span>Ready in your browser.</span></h1>
+      <p class="lede">Choose a log family, row count, positive-finding count, difficulty, and private trainer seed. Download portable analyst logs and a separate answer key—no setup, account, upload, or backend.</p>
+    </section>
+
+    <aside class="privacy-note" role="note">
+      <strong>Safe, local training data.</strong>
+      <p>Generation runs in this browser. Nothing you enter is sent to a server or stored by this app. The site’s existing cookie notice uses one first-party cookie only if you accept it; see <a href="/privacy.html">privacy details</a>. Exports are unencrypted. Synthetic examples use documentation-only hosts and IP ranges—never use them as real threat indicators.</p>
+    </aside>
+
+    <div class="workspace">
+      <section class="panel controls" aria-labelledby="controls-title">
+        <div class="section-heading"><p class="eyebrow">SET UP A DRILL</p><h2 id="controls-title">Choose your dataset</h2></div>
+        <form id="generator" autocomplete="off">
+          <label for="family">Log family</label>
+          <select id="family" name="family">
+            <option value="linux-messages">Linux messages / auth.log</option>
+            <option value="linux-syslog">Linux syslog</option>
+            <option value="linux-maillog">Linux maillog</option>
+            <option value="crowdstrike">CrowdStrike CPS/ECS-inspired training JSON</option>
+            <option value="sentinel">Microsoft Sentinel Syslog-table-shaped training JSON</option>
+            <option value="rapid7">Rapid7 generic-syslog training JSON</option>
+          </select>
+          <p class="field-help">Vendor-shaped examples are training-only—not official exports, validated vendor payloads, or ingest-ready data.</p>
+
+          <div class="field-grid">
+            <label for="total-rows">Total rows <span class="field-help">20–2,000</span><input id="total-rows" name="totalRows" type="number" min="20" max="2000" step="1" value="120" required></label>
+            <label for="base-positives">Base positive detections <span class="field-help">0–100</span><input id="base-positives" name="basePositives" type="number" min="0" max="100" step="1" value="3" required></label>
+          </div>
+          <label for="difficulty">Difficulty <span id="difficulty-label">1–5</span></label>
+          <input id="difficulty" name="difficulty" type="range" min="1" max="5" step="1" value="3">
+          <p id="difficulty-description" class="field-help" aria-live="polite"></p>
+
+          <label for="seed">Trainer seed—keep private</label>
+          <div class="seed-row"><input id="seed" name="seed" type="text" maxlength="64" value="" spellcheck="false"><button id="new-seed" class="button secondary" type="button">New seed</button></div>
+          <p class="field-help">Trainer seed—keep private; do not share with analyst logs. The answer-key file contains the seed and finding IDs. The same settings and seed reproduce scenario content and order, but row and process IDs are fresh for each generation; retain the paired analyst log and key for exact replay. Seed: <code id="seed-label"></code></p>
+        </form>
+        <div class="summary" aria-live="polite" aria-label="Dataset preview summary">
+          <div><span>Total analyst rows</span><strong id="row-count">120</strong></div>
+          <div><span>Planted findings</span><strong id="finding-count">5</strong></div>
+          <div><span>Difficulty additions</span><strong id="extra-count">2</strong></div>
+        </div>
+        <p class="formula">Preview rule: planted findings = min(total rows, base positives + difficulty − 1). Higher tiers add one finding each, then increase linked-event context and signal subtlety.</p>
+        <div class="actions">
+          <button id="download-logs" class="button primary" type="button">Download analyst JSONL</button>
+          <button id="download-raw" class="button secondary" type="button">Download raw syslog</button>
+          <button id="download-key" class="button secondary" type="button">Download answer key</button>
+        </div>
+        <p id="status" class="status" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="panel preview" aria-labelledby="preview-title">
+        <div class="section-heading"><p class="eyebrow">ANALYST VIEW</p><h2 id="preview-title">Log preview</h2></div>
+        <p id="preview-note" class="field-help">Previewing the first rows only. The answer key is a separate file.</p>
+        <pre id="preview" class="log-preview" tabindex="0" aria-label="First synthetic analyst log rows"></pre>
+        <details id="show-key" class="answer-key">
+          <summary>Reveal the answer key in this browser</summary>
+          <p class="field-help">Keep this closed when sharing the screen with an analyst. The download remains a separate file.</p>
+          <pre id="answer-key" class="log-preview" tabindex="0"></pre>
+        </details>
+      </section>
+    </div>
+    <section class="notes" aria-labelledby="limits-title">
+      <h2 id="limits-title">Format and safety notes</h2>
+      <ul>
+        <li>Linux options export raw, RFC 5424-shaped syslog text plus JSONL. They are synthetic examples, not a promise of any distribution’s exact defaults.</li>
+        <li>Sentinel output resembles documented Syslog table field names; CrowdStrike is CPS/ECS-inspired; Rapid7 is generic syslog training JSON. All are labeled training-only and are not official export schemas.</li>
+        <li>No actual credentials, malware, real domains, or routable indicators are included. Do not treat synthetic rows as threat intelligence or use them to test production detections without review.</li>
+        <li>Nothing is stored by the app. The browser may retain downloads in your chosen location; exported files are not encrypted.</li>
+      </ul>
+    </section>
+  </main>
+  <footer><span>SOC Log Lab · a synthetic training-data generator</span><span><a href="/privacy.html">Privacy</a> · <a href="https://github.com/Random-Vibez/randomvibez-soc-log-lab" rel="noopener noreferrer">Source &amp; security</a></span></footer>
+  <script src="app.js" defer></script>
+  <script src="../cookie-banner.js" defer></script>
+</body>
+</html>
