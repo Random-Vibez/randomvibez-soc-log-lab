@@ -421,6 +421,21 @@
         failGeneration(error);
       }
     };
+    const noticeSlot = root.document.getElementById('cookie-notice-slot');
+    if (noticeSlot && root.MutationObserver) {
+      const observer = new root.MutationObserver(() => {
+        const notice = root.document.querySelector('.cookie-banner');
+        if (!notice) return;
+        noticeSlot.appendChild(notice);
+        observer.disconnect();
+      });
+      observer.observe(root.document.body, { childList: true });
+      const notice = root.document.querySelector('.cookie-banner');
+      if (notice) {
+        noticeSlot.appendChild(notice);
+        observer.disconnect();
+      }
+    }
     if (root.document.readyState === 'loading') root.document.addEventListener('DOMContentLoaded', init, { once: true });
     else init();
   }

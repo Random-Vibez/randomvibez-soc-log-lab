@@ -70,11 +70,14 @@ assert.match(printCss, /\.cookie-banner-accept:focus-visible\s*\{[^}]*outline:\s
 assert.match(printCss, /@media\s*\(max-width:\s*560px\)\s*\{\.cookie-banner\s*\{[^}]*flex-direction:\s*column[^}]*width:\s*calc\(100%\s*-\s*1\.5rem\)[^}]*\}\.cookie-banner-accept\s*\{[^}]*width:\s*100%/i, 'narrow mobile notice stacks its copy and full-width accept button');
 assert.doesNotMatch(printCss, /@media\s*\(max-width:\s*480px\)\s*\{\.shell\s*\{\s*padding-bottom:\s*calc\(3rem\s*\+\s*13rem\)/i, 'mobile shell has no extra fixed-banner clearance');
 const appHtml = fs.readFileSync(require.resolve('../index.html'), 'utf8');
+const appScript = fs.readFileSync(require.resolve('../app.js'), 'utf8');
 const cookieScript = fs.readFileSync(require.resolve('../../../cookie-banner.js'), 'utf8');
 assert.match(appHtml, /<link\s+rel="stylesheet"\s+href="styles\.css"\s*>/i, 'app keeps loading its local stylesheet');
 assert.doesNotMatch(appHtml, /(?:\.\.\/|\/)styles\.css/i, 'app does not load the root site stylesheet');
-assert.match(appHtml, /<footer>[\s\S]*?<\/footer>\s*<script src="app\.js" defer><\/script>\s*<script src="\.\.\/cookie-banner\.js" defer><\/script>\s*<\/body>/i, 'shared notice script runs after app content at the bottom of the document');
-assert.match(cookieScript, /document\.body\.appendChild\(banner\)/, 'shared notice is appended as the final in-flow body child');
+assert.match(appHtml, /<header class="topbar">[\s\S]*?<\/header>\s*<div id="cookie-notice-slot"><\/div>\s*<main/i, 'app provides an in-flow notice slot before the generator');
+assert.match(appHtml, /<script src="app\.js" defer><\/script>\s*<script src="\.\.\/cookie-banner\.js" defer><\/script>\s*<\/body>/i, 'shared notice script remains loaded after the app runtime');
+assert.match(cookieScript, /document\.body\.appendChild\(banner\)/, 'shared notice creation and consent behavior are unchanged');
+assert.match(appScript, /new root\.MutationObserver[\s\S]*?noticeSlot\.appendChild\(notice\)[\s\S]*?observer\.disconnect\(\)/, 'app relocates the shared notice into its visible in-flow slot');
 assert.match(cookieScript, /A small site note[\s\S]*?If you accept, RandomVibez stores one essential first-party cookie[\s\S]*?It does not track activity, measure visits, or collect personal information\.[\s\S]*?You can browse normally; accepting simply hides this notice for up to one year\.[\s\S]*?Privacy details/i, 'shared notice copy remains unchanged');
 assert.match(cookieScript, /const COOKIE_NAME = 'randomvibez_cookie_notice';[\s\S]*?const COOKIE_VALUE = 'accepted';[\s\S]*?if \(hasAccepted\) return;/, 'shared acceptance cookie and existing dismissal boundary remain intact');
 assert.match(cookieScript, /Max-Age=31536000; Path=\/; SameSite=Lax[\s\S]*?banner\.remove\(\)/, 'acceptance still stores the one-year first-party preference and hides the notice');
