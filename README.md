@@ -20,9 +20,10 @@ Open `index.html` from a local static web server or visit the published RandomVi
 
 ```sh
 node tests/test_app.js
+SOC_LOG_LAB_URL=https://randomvibez.ai/soc-log-lab/ uv run --with playwright --with pytest python3 -m pytest -q tests/test_browser_downloads.py
 ```
 
-The tests exercise deterministic scenario-content/order generation, per-generation CSPRNG IDs, seed privacy, row and finding bounds, output labels, vendor-format caveats, Linux raw syslog line counts, missing-Web-Crypto failure behavior, and input validation.
+The Node tests exercise deterministic scenario-content/order generation, per-generation CSPRNG IDs, seed privacy, row and finding bounds, output labels, vendor-format caveats, Linux raw syslog line counts, missing-Web-Crypto failure behavior, and input validation. The collected Playwright tests open a fresh browser context against the public app, verify actual saved analyst/key/syslog downloads and cross-references, and check first-visit mobile layout. Set `PLAYWRIGHT_CHROMIUM_EXECUTABLE` when Chromium is installed outside Playwright's default cache; set `SOC_LOG_LAB_URL` only for a deliberate alternate test target.
 
 ## Public references (research preflight)
 
